@@ -52,4 +52,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: anki-build-artifacts
-          path: out/**
+          # path: out/**
+          path: out/**/*.dmg

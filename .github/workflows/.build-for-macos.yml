@@ -10,8 +10,8 @@ on:
 
 jobs:
   build:
-    # runs-on: macos-latest
-    runs-on: macos-13
+    runs-on: macos-latest
+    # runs-on: macos-13
 
     strategy:
       matrix:
@@ -46,22 +46,7 @@ jobs:
       - name: Bundle into dmg
         run: |
           git submodule update --checkout qt/bundle/PyOxidizer
-          max_tries=10
-          i=0
-          while hdiutil info | grep -q "/Volumes/Anki"; do
-              hdiutil detach /Volumes/Anki || true
-              sleep 2
-          done
-          until ./ninja bundle
-          do
-              if [ $i -eq $max_tries ]
-              then
-                  echo 'Error: ./ninja bundle did not succeed even after 10 tries.'
-                  exit 1
-              fi
-              echo "Retrying... ($((i+1))/$max_tries)"
-              i=$((i+1))
-          done
+          arch -x86_64 ./ninja bundle
 
       - name: List files in out directory
         run: |

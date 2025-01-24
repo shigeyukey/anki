@@ -46,6 +46,7 @@ jobs:
       - name: Bundle into dmg
         run: |
           git submodule update --checkout qt/bundle/PyOxidizer
+          diutil detach /Volumes/Anki || true
           ./ninja bundle
 
       - name: List files in out directory

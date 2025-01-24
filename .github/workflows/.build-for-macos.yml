@@ -39,10 +39,6 @@ jobs:
         run: |
           brew install mpv lame
 
-      # - name: Build
-      #   run: |
-      #     ./run
-
       - name: Bundle into dmg
         run: |
           git submodule update --checkout qt/bundle/PyOxidizer
@@ -50,11 +46,10 @@ jobs:
 
       - name: List files in out directory
         run: |
-          ls -lh out
+          ls -lhR out/bundle/
 
-      # - name: Upload artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: anki-build-artifacts
-      #     # path: out/**
-      #     path: out/**/*.dmg
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anki-build-artifacts
+          path: out/bundle/dmg/*

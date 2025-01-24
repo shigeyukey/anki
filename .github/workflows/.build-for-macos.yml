@@ -1,21 +1,21 @@
 name: Build for macOS
 
-# on:
-#   push:
-#     branches:
-#       - github-action-test
-
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - github-action-test
+
+# on:
+#   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-latest
+    # runs-on: macos-latest
+    runs-on: macos-13
 
     strategy:
       matrix:
         python-version: [3.9]
-        target: [x86_64-apple-darwin]
 
     steps:
       - name: Checkout repository

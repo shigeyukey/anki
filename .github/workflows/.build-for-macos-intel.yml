@@ -56,6 +56,12 @@ jobs:
                   exit 1
               fi
               echo "Retrying... ($i/$max_tries)"
+              if mount | grep /Volumes/Anki; then
+                for i in {1..5}; do
+                  hdiutil unmount /Volumes/Anki && break || sleep 2
+                done
+              fi
+              sleep 10
               i=$((i+1))
           done
 

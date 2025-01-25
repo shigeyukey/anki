@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     # runs-on: macos-latest
-    runs-on: macos-12
+    runs-on: macos-13
 
     strategy:
       matrix:
@@ -46,7 +46,18 @@ jobs:
       - name: Bundle into dmg
         run: |
           git submodule update --checkout qt/bundle/PyOxidizer
-          ./ninja bundle
+          max_tries=10
+          i=0
+          until ./ninja bundle
+          do
+              if [ $i -eq $max_tries ]
+              then
+                  echo 'Error: ./ninja bundle did not succeed even after 10 tries.'
+                  exit 1
+              fi
+              echo "Retrying... ($i/$max_tries)"
+              i=$((i+1))
+          done
 
       - name: List files in out directory
         run: |

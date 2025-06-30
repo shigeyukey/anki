@@ -33,16 +33,14 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      - name: Create and activate virtual environment
-        run: |
-          python -m venv venv
-          .\venv\Scripts\activate
+      - name: Create virtual environment
+        run: python -m venv venv
 
       - name: Install Python dependencies
         run: |
-          .\venv\Scripts\pip install --upgrade pip
-          .\venv\Scripts\pip install -r requirements.txt
-          .\venv\Scripts\pip install -r pylib/requirements.txt
+          .\venv\Scripts\python.exe -m pip install --upgrade pip
+          .\venv\Scripts\python.exe -m pip install --upgrade setuptools wheel
+          .\venv\Scripts\python.exe -m pip install -r requirements.txt -r pylib/requirements.txt
 
       - name: Build TypeScript frontend
         working-directory: ts
@@ -51,10 +49,10 @@ jobs:
           npm run build
 
       - name: Build Anki (runanki)
-        run: .\venv\Scripts\python runanki --version
+        run: .\venv\Scripts\python.exe runanki --version
 
       - name: Run tests
-        run: .\venv\Scripts\python -m pytest --maxfail=1 --disable-warnings -q
+        run: .\venv\Scripts\python.exe -m pytest --maxfail=1 --disable-warnings -q
 
       - name: Archive build artifacts
         if: success()

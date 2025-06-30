@@ -68,14 +68,18 @@ jobs:
         run: |
           yarn install --frozen-lockfile
 
+      - name: Ensure out directory exists
+        run: |
+          if [ ! -d out ]; then mkdir out; fi
+
       - name: Install JS dependencies (out)
         run: npm ci
-        working-directory: ./out
+        working-directory: out
 
       - name: List bin contents in out
         shell: bash
         run: ls -la node_modules/.bin
-        working-directory: ./out
+        working-directory: out
 
       - name: Build Windows Wheel
         shell: bash -l {0}

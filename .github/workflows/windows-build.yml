@@ -1,6 +1,6 @@
 name: Windows Build
 
-"on":
+on:
   workflow_dispatch:
 
 jobs:

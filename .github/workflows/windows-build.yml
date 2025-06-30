@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - Anki-build-test
-  workflow_dispatch:
+# on:
+#   workflow_dispatch:
 
 jobs:
   build-windows:
@@ -50,18 +51,14 @@ jobs:
           npm run build
 
       - name: Build Anki (runanki)
-        run: |
-          .\venv\Scripts\activate
-          python runanki --version
+        run: .\venv\Scripts\python runanki --version
 
       - name: Run tests
-        run: |
-          .\venv\Scripts\activate
-          pytest --maxfail=1 --disable-warnings -q
+        run: .\venv\Scripts\python -m pytest --maxfail=1 --disable-warnings -q
 
       - name: Archive build artifacts
         if: success()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: anki-windows-build-3.12
           path: |

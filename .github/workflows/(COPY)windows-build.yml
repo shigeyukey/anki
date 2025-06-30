@@ -1,0 +1,58 @@
+name: Build for Windows
+
+on:
+  # push:
+  #   branches:
+  #     - Anki-build-test
+ workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        python-version: [3.12]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "##[addPath]$USERPROFILE\\.cargo\\bin"
+
+      - name: Install Chocolatey packages
+        run: |
+          choco install -y rsync git
+          choco install -y --ignore-checksums lame
+          choco install -y --ignore-checksums mpv
+
+      - name: Install N2
+        run: |
+          bash tools/install-n2
+
+      - name: Bundle Windows installer
+        run: |
+          python -m venv venv
+          venv\Scripts\activate
+          pip install -r requirements.bundle.txt
+          bundle.bat
+
+      - name: List files in out directory
+        run: |
+          dir /s /b out
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anki-windows-installer
+          path: out/bundle/msi/*.msi

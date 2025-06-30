@@ -1,4 +1,4 @@
-name: Build for Windows
+name: Build Anki Windows Wheel
 
 on:
   push:
@@ -7,52 +7,52 @@ on:
 #  workflow_dispatch:
 
 jobs:
-  build:
+  build-windows-wheel:
     runs-on: windows-latest
-
-    strategy:
-      matrix:
-        python-version: [3.12]
+    env:
+      MSYS2_PATH: C:\msys64\usr\bin
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
+        uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.12'
+          check-latest: true
 
       - name: Install Rust
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          echo "##[addPath]$USERPROFILE\\.cargo\\bin"
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+          targets: x86_64-pc-windows-msvc
 
-      - name: Install Chocolatey packages
-        run: |
-          choco install -y rsync git
-          choco install -y --ignore-checksums lame
-          choco install -y --ignore-checksums mpv
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: git rsync
 
       - name: Install N2
         run: |
-          bash tools/install-n2
+          tools\install-n2
 
-      - name: Bundle Windows installer
+      - name: Set ANKIDEV
         run: |
-          python -m venv venv
-          venv\Scripts\activate
-          pip install -r requirements.bundle.txt
-          bundle.bat
+          echo "ANKIDEV=1" >> $GITHUB_ENV
 
-      - name: List files in out directory
+      - name: Build Windows Wheel
+        shell: bash -l {0}
         run: |
-          dir /s /b out
+          export PATH="$MSYS2_PATH:$PATH"
+          tools/build.bat
 
-      - name: Upload artifact
+      - name: Upload Wheels
         uses: actions/upload-artifact@v4
         with:
-          name: anki-windows-installer
-          path: out/bundle/msi/*.msi
+          name: anki-windows-wheels
+          path: out/wheels/*.whl

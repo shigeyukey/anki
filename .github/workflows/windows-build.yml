@@ -12,6 +12,7 @@ jobs:
     runs-on: windows-latest
     env:
       MSYS2_PATH: C:\msys64\usr\bin
+      _NT_CMDLINE_LIMIT: 1000000
 
     steps:
       - name: Checkout repository
@@ -30,7 +31,7 @@ jobs:
           toolchain: stable
           override: true
           components: clippy
-          targets: x86_64-pc-windows-msvc
+          target: x86_64-pc-windows-msvc
 
       - name: Setup MSYS2 and dependencies
         uses: msys2/setup-msys2@v2

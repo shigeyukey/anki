@@ -1,11 +1,10 @@
-name: Windows Build
+name: Windows Build & Dev Checks
 
 on:
   push:
     branches:
       - Anki-build-test
-# on:
-#   workflow_dispatch:
+#  workflow_dispatch:
 
 jobs:
   build-windows:
@@ -20,12 +19,24 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Rust toolchain
+      - name: Install Rust toolchain (stable)
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          target: wasm32-unknown-unknown
           override: true
+
+      - name: Add MSVC target for Rust
+        run: rustup target add x86_64-pc-windows-msvc
+
+      - name: Install MSYS2 and packages
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >
+            git
+            rsync
+            mpv
+            lame
 
       - name: Install Node.js (LTS)
         uses: actions/setup-node@v4
@@ -38,9 +49,11 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          .\venv\Scripts\python.exe -m pip install --upgrade pip
-          .\venv\Scripts\python.exe -m pip install --upgrade setuptools wheel
+          .\venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
           .\venv\Scripts\python.exe -m pip install -r requirements.txt -r pylib/requirements.txt
+
+      - name: Install N2 (better ninja)
+        run: bash tools/install-n2
 
       - name: Build TypeScript frontend
         working-directory: ts
@@ -48,17 +61,36 @@ jobs:
           npm ci
           npm run build
 
-      - name: Build Anki (runanki)
+      - name: Build Anki (run in-place)
         run: .\venv\Scripts\python.exe runanki --version
+
+      - name: Run all checks
+        run: .\tools\ninja check
+
+      - name: Fix code formatting
+        run: .\tools\ninja format
+
+      - name: Fix linter & headers
+        run: .\tools\ninja fix
+
+      - name: Run clippy fixes
+        run: cargo clippy --fix --allow-dirty --allow-staged
 
       - name: Run tests
         run: .\venv\Scripts\python.exe -m pytest --maxfail=1 --disable-warnings -q
+
+      - name: Build Python wheels
+        run: .\tools\build.bat
 
       - name: Archive build artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: anki-windows-build-3.12
+          name: anki-windows-dev-artifacts
           path: |
-            .\venv\Scripts\python.exe
+            out\wheels\*.whl
             ts\dist\
+
+      - name: Clean up out folder
+        if: success()
+        run: rmdir /S /Q out

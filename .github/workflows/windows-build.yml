@@ -70,7 +70,12 @@ jobs:
 
       - name: Ensure out directory exists
         run: |
-          if (!(Test-Path -Path "out")) { New-Item -ItemType Directory -Path "out" }
+          if (!(Test-Path -Path "out")) { New-Item -ItemType Directory -Path "out" | Out-Null }
+        shell: pwsh
+
+      - name: Copy lock file to out (required for npm ci)
+        run: |
+          Copy-Item -Path "package-lock.json" -Destination "out/package-lock.json"
         shell: pwsh
 
       - name: Install JS dependencies (out)

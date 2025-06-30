@@ -1,96 +1,76 @@
-name: Windows Build & Dev Checks
+name: Build for Windows
 
 on:
   push:
     branches:
-      - Anki-build-test
+      - test-non-camera-permission
 #  workflow_dispatch:
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
+
+    strategy:
+      matrix:
+        python-version: [3.12]
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install Rust toolchain (stable)
+      - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
 
-      - name: Add MSVC target for Rust
-        run: rustup target add x86_64-pc-windows-msvc
+      - name: Add MSVC build tools
+        uses: microsoft/setup-msbuild@v1.3.1
 
-      - name: Install MSYS2 and packages
-        uses: msys2/setup-msys2@v2
-        with:
-          update: true
-          install: >
-            git
-            rsync
-            mpv
-            lame
-
-      - name: Install Node.js (LTS)
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Create virtual environment
-        run: python -m venv venv
-
-      - name: Install Python dependencies
+      - name: Install N2
+        shell: bash
         run: |
-          .\venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
-          .\venv\Scripts\python.exe -m pip install -r requirements.txt -r pylib/requirements.txt
+          bash tools/install-n2
 
-      - name: Install N2 (better ninja)
-        run: bash tools/install-n2
-
-      - name: Build TypeScript frontend
-        working-directory: ts
+      - name: Install required packages (mpv, lame, etc.)
+        shell: bash
         run: |
-          npm ci
-          npm run build
+          choco install mpv lame -y
 
-      - name: Build Anki (run in-place)
-        run: .\venv\Scripts\python.exe runanki --version
+      - name: Update Git submodules
+        shell: bash
+        run: |
+          git submodule update --checkout qt/bundle/PyOxidizer
 
-      - name: Run all checks
-        run: .\tools\ninja check
+      - name: Build Anki (with retries)
+        shell: bash
+        run: |
+          max_tries=10
+          i=0
+          until ./ninja bundle
+          do
+              if [ $i -eq $max_tries ]
+              then
+                  echo 'Error: ./ninja bundle did not succeed even after 10 tries.'
+                  exit 1
+              fi
+              echo "Retrying... ($i/$max_tries)"
+              sleep 10
+              i=$((i+1))
+          done
 
-      - name: Fix code formatting
-        run: .\tools\ninja format
+      - name: List files in out directory
+        shell: bash
+        run: |
+          ls -lhR out/bundle/
 
-      - name: Fix linter & headers
-        run: .\tools\ninja fix
-
-      - name: Run clippy fixes
-        run: cargo clippy --fix --allow-dirty --allow-staged
-
-      - name: Run tests
-        run: .\venv\Scripts\python.exe -m pytest --maxfail=1 --disable-warnings -q
-
-      - name: Build Python wheels
-        run: .\tools\build.bat
-
-      - name: Archive build artifacts
-        if: success()
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: anki-windows-dev-artifacts
-          path: |
-            out\wheels\*.whl
-            ts\dist\
-
-      - name: Clean up out folder
-        if: success()
-        run: rmdir /S /Q out
+          name: anki-build-artifacts
+          path: out/bundle/*

@@ -53,6 +53,15 @@ jobs:
         run: |
           echo "ANKIDEV=1" >> $GITHUB_ENV
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install JS dependencies
+        run: |
+          npm ci
+
       - name: Build Windows Wheel
         shell: cmd
         run: |

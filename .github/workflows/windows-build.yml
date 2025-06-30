@@ -3,7 +3,7 @@ name: Build for Windows
 on:
   push:
     branches:
-      - test-non-camera-permission
+      - Anki-build-test
 #  workflow_dispatch:
 
 jobs:

@@ -1,4 +1,3 @@
-# .github/workflows/build-windows-wheel.yml
 name: Build Anki Windows Wheel
 
 on:
@@ -65,16 +64,18 @@ jobs:
           corepack enable
           corepack prepare yarn@4.6.0 --activate
 
-      - name: Install JS dependencies
+      - name: Install JS dependencies (root)
         run: |
           yarn install --frozen-lockfile
 
-      - name: List bin contents
-        shell: bash
-        run: ls -la ./out/node_modules/.bin
-
-      - name: Install Node.js dependencies
+      # Run npm ci in the ./out directory first to populate node_modules
+      - name: Install JS dependencies (out)
         run: npm ci
+        working-directory: ./out
+
+      - name: List bin contents in out
+        shell: bash
+        run: ls -la node_modules/.bin
         working-directory: ./out
 
       - name: Build Windows Wheel

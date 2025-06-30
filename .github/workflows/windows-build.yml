@@ -1,10 +1,11 @@
+# .github/workflows/build-windows-wheel.yml
 name: Build Anki Windows Wheel
 
 on:
   push:
     branches:
       - Anki-build-test
-#  workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   build-windows-wheel:
@@ -31,7 +32,7 @@ jobs:
           components: clippy
           targets: x86_64-pc-windows-msvc
 
-      - name: Setup MSYS2
+      - name: Setup MSYS2 and dependencies
         uses: msys2/setup-msys2@v2
         with:
           update: true
@@ -53,24 +54,14 @@ jobs:
         run: |
           echo "ANKIDEV=1" >> $GITHUB_ENV
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install JS dependencies
-        run: |
-          npm ci
-
       - name: Build Windows Wheel
-        shell: cmd
+        shell: bash -l {0}
         run: |
-          set PATH=%MSYS2_PATH%;%PATH%
-          tools\build.bat
+          export PATH="$MSYS2_PATH:$PATH"
+          tools/build.bat
 
-      - name: Upload Wheels
+      - name: Upload Windows Wheels
         uses: actions/upload-artifact@v4
         with:
           name: anki-windows-wheels
           path: out/wheels/*.whl
-

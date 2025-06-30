@@ -73,13 +73,14 @@ jobs:
           if (!(Test-Path -Path "out")) { New-Item -ItemType Directory -Path "out" | Out-Null }
         shell: pwsh
 
-      - name: Copy lock file to out (required for npm ci)
-        run: |
-          Copy-Item -Path "package-lock.json" -Destination "out/package-lock.json"
-        shell: pwsh
-
       - name: Install JS dependencies (out)
-        run: npm ci
+        run: |
+          if (Test-Path -Path "out/package-lock.json") {
+            npm ci
+          } else {
+            echo "Skipping npm ci: package-lock.json not found in out"
+          }
+        shell: pwsh
         working-directory: out
 
       - name: List bin contents in out

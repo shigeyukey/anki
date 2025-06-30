@@ -52,7 +52,7 @@ jobs:
 
       - name: Set ANKIDEV
         run: |
-          echo "ANKIDEV=1" >> $GITHUB_ENV
+          echo "ANKIDEV=1" >> $env:GITHUB_ENV
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -70,7 +70,8 @@ jobs:
 
       - name: Ensure out directory exists
         run: |
-          if [ ! -d out ]; then mkdir out; fi
+          if (!(Test-Path -Path "out")) { New-Item -ItemType Directory -Path "out" }
+        shell: pwsh
 
       - name: Install JS dependencies (out)
         run: npm ci

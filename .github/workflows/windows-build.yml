@@ -68,7 +68,6 @@ jobs:
         run: |
           yarn install --frozen-lockfile
 
-      # Run npm ci in the ./out directory first to populate node_modules
       - name: Install JS dependencies (out)
         run: npm ci
         working-directory: ./out

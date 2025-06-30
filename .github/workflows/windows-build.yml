@@ -66,6 +66,7 @@ jobs:
           corepack prepare yarn@4.6.0 --activate
 
       - name: List bin contents
+        shell: bash
         run: ls -la ./out/node_modules/.bin
 
       - name: Install JS dependencies

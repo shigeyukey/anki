@@ -1,0 +1,73 @@
+name: Windows Build
+
+on:
+  push:
+    branches:
+      - main
+      - Anki-build-test
+  pull_request:
+    branches:
+      - main
+      - Anki-build-test
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          override: true
+
+      - name: Install Node.js (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Create and activate virtual environment
+        run: |
+          python -m venv venv
+          .\venv\Scripts\activate
+
+      - name: Install Python dependencies
+        run: |
+          .\venv\Scripts\pip install --upgrade pip
+          .\venv\Scripts\pip install -r requirements.txt
+          .\venv\Scripts\pip install -r pylib/requirements.txt
+
+      - name: Build TypeScript frontend
+        working-directory: ts
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build Anki (runanki)
+        run: |
+          .\venv\Scripts\activate
+          python runanki --version
+
+      - name: Run tests
+        run: |
+          .\venv\Scripts\activate
+          pytest --maxfail=1 --disable-warnings -q
+
+      - name: Archive build artifacts
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: anki-windows-build-3.12
+          path: |
+            .\venv\Scripts\python.exe
+            ts\dist\

@@ -35,7 +35,14 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           update: true
-          install: git rsync
+          install: >-
+            git
+            rsync
+            make
+            patch
+            tar
+            unzip
+            mingw-w64-x86_64-toolchain
 
       - name: Install N2
         run: |

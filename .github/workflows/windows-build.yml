@@ -65,9 +65,16 @@ jobs:
           corepack enable
           corepack prepare yarn@4.6.0 --activate
 
+      - name: List bin contents
+        run: ls -la ./out/node_modules/.bin
+
       - name: Install JS dependencies
         run: |
           yarn install --frozen-lockfile
+
+      - name: Install Node.js dependencies
+        run: npm ci
+        working-directory: ./out
 
       - name: Build Windows Wheel
         shell: bash -l {0}

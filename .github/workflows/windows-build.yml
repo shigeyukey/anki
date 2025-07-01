@@ -1,4 +1,4 @@
-name: Build Anki Windows Wheel
+name: Build Anki Windows Wheel (Anki25.07)
 
 on:
   push:
@@ -23,28 +23,29 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-      - run: npm install
+      # - name: Set up Node.js
+      #   uses: actions/setup-node@v4
+      # - run: npm install
+      #   shell: pwsh
 
-      # yarn: 1.22.22 -> yarn@4.6.0
-      - name: Install Yarn
-        # run: npm install -g yarn@4.6.0
-        run: |
-          corepack enable
-          corepack prepare yarn@4.6.0 --activate
-          yarn --version
-        shell: pwsh
+      # # yarn: 1.22.22 -> yarn@4.6.0
+      # - name: Install Yarn
+      #   # run: npm install -g yarn@4.6.0
+      #   run: |
+      #     corepack enable
+      #     corepack prepare yarn@4.6.0 --activate
+      #     yarn --version
+      #   shell: pwsh
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          target: x86_64-pc-windows-msvc
+      # - name: Install Rust
+      #   uses: actions-rs/toolchain@v1
+      #   with:
+      #     toolchain: stable
+      #     override: true
+      #     target: x86_64-pc-windows-msvc
 
       # Visual Studio Community Edition (追加ｲﾝｽﾄｰﾙ不要)
-      # GitHub Actions WinはPowerShellが標準
+      # GitHub Actions Winは PowerShell が標準
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
@@ -53,30 +54,6 @@ jobs:
           install: |
             git
             rsync
-
-      # make
-      # patch
-      # tar
-      # unzip
-      # mingw-w64-x86_64-toolchain
-      # mingw-w64-x86_64-ninja
-
-      # - name: Download mpv.exe
-      #   run: |
-      #     Invoke-WebRequest -Uri "https://sourceforge.net/projects/mpv-player-windows/files/64bit/mpv-x86_64-latest.7z/download" -OutFile "mpv.7z"
-      #     7z x mpv.7z -ompv
-      #   shell: pwsh
-
-      # - name: Download lame.exe
-      #   run: |
-      #     Invoke-WebRequest -Uri "https://www.rarewares.org/files/mp3/lame3.100.1-x64.zip" -OutFile "lame.zip"
-      #     Expand-Archive lame.zip -DestinationPath lame
-      #   shell: pwsh
-
-      # - name: Add mpv.exe and lame.exe to PATH
-      #   run: |
-      #     echo "$env:GITHUB_WORKSPACE\mpv;$env:GITHUB_WORKSPACE\lame" | Out-File -Append -Encoding ascii $env:GITHUB_PATH
-      #   shell: pwsh
 
       - name: Install N2
         run: |

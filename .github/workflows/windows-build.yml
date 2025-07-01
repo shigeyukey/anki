@@ -27,8 +27,9 @@ jobs:
         uses: actions/setup-node@v4
       - run: npm install
 
+      # yarn: 1.22.22 -> yarn@4.6.0
       - name: Install Yarn
-        run: npm install -g yarn
+        run: npm install -g yarn@4.6.0
         shell: pwsh
 
       - name: Install Rust

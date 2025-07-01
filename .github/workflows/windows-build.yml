@@ -56,5 +56,5 @@ jobs:
       #     path: out/wheels/*.whl
 
       - name: Ninja check (debug)
-        run: ./ninja check
+        run: ./run
         shell: pwsh

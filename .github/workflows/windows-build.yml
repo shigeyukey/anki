@@ -3,8 +3,7 @@ name: Build Anki Windows Wheel (Anki25.07)
 on:
   push:
     branches:
-      - main
-      # - Anki-build-test
+      - Anki-build-test
   workflow_dispatch:
 
 jobs:
@@ -35,9 +34,14 @@ jobs:
             git
             rsync
 
-      - name: Install N2
+      # - name: Install N2
+      #   run: |
+      #     tools\install-n2
+      #   shell: pwsh
+
+      - name: Install Ninja
         run: |
-          tools\install-n2
+          choco install ninja -y
         shell: pwsh
 
       # $env:GITHUB_ENVは環境変数を後続のｽﾃｯﾌﾟに渡す

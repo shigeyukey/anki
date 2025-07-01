@@ -3,7 +3,8 @@ name: Build Anki Windows Wheel (Anki25.07)
 on:
   push:
     branches:
-      - Anki-build-test
+      - main
+      # - Anki-build-test
   workflow_dispatch:
 
 jobs:
@@ -45,16 +46,16 @@ jobs:
           echo "ANKIDEV=1" >> $env:GITHUB_ENV
         shell: pwsh
 
-      # - name: Build Anki wheel (build.bat)
-      #   run: tools\build.bat
-      #   shell: pwsh
-
-      # - name: Upload Windows Wheels
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: anki-windows-wheels
-      #     path: out/wheels/*.whl
-
-      - name: Ninja check (debug)
-        run: ./run
+      - name: Build Anki wheel (build.bat)
+        run: tools\build.bat
         shell: pwsh
+
+      - name: Upload Windows Wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: anki-windows-wheels
+          path: out/wheels/*.whl
+
+      # - name: Ninja check (debug)
+      #   run: ./run
+      #   shell: pwsh

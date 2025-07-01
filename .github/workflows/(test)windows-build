@@ -1,0 +1,101 @@
+name: Build Anki Windows Wheel
+
+on:
+  # push:
+  #   branches:
+  #     - Anki-build-test
+  workflow_dispatch:
+
+jobs:
+  build-windows-wheel:
+    runs-on: windows-latest
+    env:
+      MSYS2_PATH: C:\msys64\usr\bin
+      _NT_CMDLINE_LIMIT: 1000000
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          check-latest: true
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+          target: x86_64-pc-windows-msvc
+
+      - name: Setup MSYS2 and dependencies
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: |
+            git
+            rsync
+            make
+            patch
+            tar
+            unzip
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-ninja
+
+      - name: Install N2
+        run: |
+          tools\install-n2
+
+      - name: Set ANKIDEV
+        run: |
+          echo "ANKIDEV=1" >> $env:GITHUB_ENV
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Enable Corepack and set Yarn version
+        run: |
+          corepack enable
+          corepack prepare yarn@4.6.0 --activate
+
+      - name: Install JS dependencies (root)
+        run: |
+          yarn install --frozen-lockfile
+
+      - name: Ensure out directory exists
+        run: |
+          if (!(Test-Path -Path "out")) { New-Item -ItemType Directory -Path "out" | Out-Null }
+        shell: pwsh
+
+      - name: Install JS dependencies (out)
+        run: |
+          if (Test-Path -Path "out/package-lock.json") {
+            npm ci
+          } else {
+            echo "Skipping npm ci: package-lock.json not found in out"
+          }
+        shell: pwsh
+        working-directory: out
+
+      - name: List bin contents in out
+        shell: bash
+        run: ls -la node_modules/.bin
+        working-directory: out
+
+      - name: Build Windows Wheel
+        shell: bash -l {0}
+        run: |
+          export PATH="$MSYS2_PATH:$PATH"
+          tools/build.bat
+
+      - name: Upload Windows Wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: anki-windows-wheels
+          path: out/wheels/*.whl

@@ -1,0 +1,76 @@
+name: Build for macOS intel
+
+# on:
+#   push:
+#     branches:
+#       - test-non-camera-permission
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    # runs-on: macos-latest
+    runs-on: macos-13
+
+    strategy:
+      matrix:
+        python-version: [3.9]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+
+      - name: Install N2
+        run: |
+          bash tools/install-n2
+
+      - name: Install Git and rsync
+        run: |
+          brew install git rsync
+
+      - name: Install audio tools
+        run: |
+          brew install mpv lame
+
+      - name: Bundle into dmg
+        run: |
+          git submodule update --checkout qt/bundle/PyOxidizer
+          max_tries=10
+          i=0
+          until ./ninja bundle
+          do
+              if [ $i -eq $max_tries ]
+              then
+                  echo 'Error: ./ninja bundle did not succeed even after 10 tries.'
+                  exit 1
+              fi
+              echo "Retrying... ($i/$max_tries)"
+              if mount | grep /Volumes/Anki; then
+                for i in {1..5}; do
+                  hdiutil unmount /Volumes/Anki && break || sleep 2
+                done
+              fi
+              sleep 10
+              i=$((i+1))
+          done
+
+      - name: List files in out directory
+        run: |
+          ls -lhR out/bundle/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anki-build-artifacts
+          path: out/bundle/dmg/*
